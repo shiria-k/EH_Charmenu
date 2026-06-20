@@ -24,35 +24,122 @@ local function modelChoices()
     return choices
 end
 
+local function decodeBodygroups(value)
+    if istable(value) then return value end
+    return util.JSONToTable(tostring(value or "{}")) or {}
+end
+
+local function getBodygroupName(ent, id)
+    if not IsValid(ent) then return "Bodygroup " .. id end
+    local name = ent:GetBodygroupName(id)
+    if not name or name == "" then return "Bodygroup " .. id end
+    return name
+end
+
+local function applyBodygroupsToPreview(ent, bodygroups)
+    if not IsValid(ent) then return end
+    for id, value in pairs(bodygroups or {}) do
+        ent:SetBodygroup(tonumber(id) or 0, tonumber(value) or 0)
+    end
+end
+
+local function buildClothingControls(parent, preview, bodygroups, onChanged)
+    parent:Clear()
+
+    if not IsValid(preview) or not IsValid(preview.Entity) then
+        local label = vgui.Create("DLabel", parent)
+        label:Dock(TOP)
+        label:SetTall(30)
+        label:SetTextColor(Color(230, 230, 230))
+        label:SetText("Kein Model geladen.")
+        return
+    end
+
+    local ent = preview.Entity
+    local found = false
+
+    for id = 0, ent:GetNumBodyGroups() - 1 do
+        local count = ent:GetBodygroupCount(id)
+        if count and count > 1 then
+            found = true
+
+            local slider = vgui.Create("DNumSlider", parent)
+            slider:Dock(TOP)
+            slider:DockMargin(0, 4, 0, 0)
+            slider:SetTall(42)
+            slider:SetText(getBodygroupName(ent, id))
+            slider:SetMin(0)
+            slider:SetMax(count - 1)
+            slider:SetDecimals(0)
+            slider:SetValue(tonumber(bodygroups[tostring(id)] or bodygroups[id] or 0) or 0)
+
+            slider.OnValueChanged = function(_, value)
+                local rounded = math.floor(value)
+                bodygroups[tostring(id)] = rounded
+                ent:SetBodygroup(id, rounded)
+                if onChanged then onChanged(bodygroups) end
+            end
+        end
+    end
+
+    if not found then
+        local label = vgui.Create("DLabel", parent)
+        label:Dock(TOP)
+        label:SetTall(50)
+        label:SetWrap(true)
+        label:SetTextColor(Color(230, 230, 230))
+        label:SetText("Dieses Model hat keine Bodygroups/Kleidungsteile. Nimm ein anderes Model oder fuege Clothing-/Bodygroup-Models hinzu.")
+    end
+end
+
 local function createEditor(parent, slot, existing)
     parent:Clear()
 
-    local title = vgui.Create("DLabel", parent)
+    local root = vgui.Create("DPanel", parent)
+    root:Dock(FILL)
+    root:DockMargin(8, 8, 8, 8)
+    root.Paint = nil
+
+    local title = vgui.Create("DLabel", root)
     title:Dock(TOP)
     title:SetTall(32)
     title:SetText(existing and ("Slot " .. slot .. " bearbeiten") or ("Slot " .. slot .. " erstellen"))
     title:SetFont("DermaLarge")
     title:SetTextColor(color_white)
 
-    local nameEntry = vgui.Create("DTextEntry", parent)
+    local content = vgui.Create("DPanel", root)
+    content:Dock(FILL)
+    content.Paint = nil
+
+    local left = vgui.Create("DScrollPanel", content)
+    left:Dock(LEFT)
+    left:SetWide(310)
+    left:DockMargin(0, 8, 10, 0)
+
+    local right = vgui.Create("DPanel", content)
+    right:Dock(FILL)
+    right:DockMargin(0, 8, 0, 0)
+    right.Paint = nil
+
+    local nameEntry = vgui.Create("DTextEntry", left)
     nameEntry:Dock(TOP)
-    nameEntry:DockMargin(0, 8, 0, 0)
+    nameEntry:DockMargin(0, 0, 0, 8)
     nameEntry:SetTall(30)
     nameEntry:SetPlaceholderText("Charaktername")
     nameEntry:SetValue(existing and tostring(existing.char_name or "") or "")
 
-    local genderBox = vgui.Create("DComboBox", parent)
+    local genderBox = vgui.Create("DComboBox", left)
     genderBox:Dock(TOP)
-    genderBox:DockMargin(0, 8, 0, 0)
+    genderBox:DockMargin(0, 0, 0, 8)
     genderBox:SetTall(30)
     genderBox:SetValue(existing and tostring(existing.gender or "Geschlecht") or "Geschlecht")
     for _, gender in ipairs(EHChar.Config.Genders) do genderBox:AddChoice(gender) end
 
-    local modelBox = vgui.Create("DComboBox", parent)
+    local modelBox = vgui.Create("DComboBox", left)
     modelBox:Dock(TOP)
-    modelBox:DockMargin(0, 8, 0, 0)
+    modelBox:DockMargin(0, 0, 0, 8)
     modelBox:SetTall(30)
-    modelBox:SetValue("Model auswaehlen")
+    modelBox:SetValue("Model / Grundkoerper auswaehlen")
 
     local selectedModel = existing and tostring(existing.model or "") or nil
     for _, choice in ipairs(modelChoices()) do
@@ -60,42 +147,99 @@ local function createEditor(parent, slot, existing)
         if selectedModel == choice.model then modelBox:SetValue(choice.name) end
     end
 
-    local skinSlider = vgui.Create("DNumSlider", parent)
+    if not selectedModel or selectedModel == "" then
+        local first = modelChoices()[1]
+        selectedModel = first and first.model or "models/player/group01/male_01.mdl"
+    end
+
+    local preview = vgui.Create("DModelPanel", right)
+    preview:Dock(TOP)
+    preview:SetTall(300)
+    preview:SetModel(selectedModel)
+    preview:SetFOV(38)
+    preview:SetCamPos(Vector(60, 0, 62))
+    preview:SetLookAt(Vector(0, 0, 45))
+    preview.LayoutEntity = function(_, ent)
+        ent:SetAngles(Angle(0, RealTime() * 20 % 360, 0))
+    end
+
+    local skinSlider = vgui.Create("DNumSlider", left)
     skinSlider:Dock(TOP)
-    skinSlider:DockMargin(0, 8, 0, 0)
+    skinSlider:DockMargin(0, 0, 0, 8)
     skinSlider:SetTall(45)
-    skinSlider:SetText("Skin")
+    skinSlider:SetText("Skin / Variante")
     skinSlider:SetMin(0)
     skinSlider:SetMax(8)
     skinSlider:SetDecimals(0)
     skinSlider:SetValue(existing and tonumber(existing.skin) or 0)
 
-    local bodygroupsEntry = vgui.Create("DTextEntry", parent)
-    bodygroupsEntry:Dock(TOP)
-    bodygroupsEntry:DockMargin(0, 8, 0, 0)
-    bodygroupsEntry:SetTall(30)
-    bodygroupsEntry:SetPlaceholderText("Bodygroups JSON, z.B. {\"1\":2,\"2\":1}")
-    bodygroupsEntry:SetValue(existing and tostring(existing.bodygroups or "{}") or "{}")
+    local bodygroups = decodeBodygroups(existing and existing.bodygroups or "{}")
 
-    local hint = vgui.Create("DLabel", parent)
+    local clothingTitle = vgui.Create("DLabel", left)
+    clothingTitle:Dock(TOP)
+    clothingTitle:DockMargin(0, 8, 0, 4)
+    clothingTitle:SetTall(24)
+    clothingTitle:SetText("Kleidung / Bodygroups")
+    clothingTitle:SetTextColor(color_white)
+    clothingTitle:SetFont("DermaDefaultBold")
+
+    local clothingPanel = vgui.Create("DScrollPanel", left)
+    clothingPanel:Dock(TOP)
+    clothingPanel:SetTall(210)
+
+    local function refreshPreview()
+        if IsValid(preview.Entity) then
+            preview.Entity:SetSkin(math.floor(skinSlider:GetValue()))
+            applyBodygroupsToPreview(preview.Entity, bodygroups)
+        end
+    end
+
+    local function rebuildClothing()
+        timer.Simple(0, function()
+            if not IsValid(clothingPanel) or not IsValid(preview) then return end
+            buildClothingControls(clothingPanel, preview, bodygroups, refreshPreview)
+            refreshPreview()
+        end)
+    end
+
+    skinSlider.OnValueChanged = function(_, value)
+        if IsValid(preview.Entity) then preview.Entity:SetSkin(math.floor(value)) end
+    end
+
+    modelBox.OnSelect = function(_, _, _, model)
+        selectedModel = model
+        bodygroups = {}
+        preview:SetModel(model)
+        rebuildClothing()
+    end
+
+    rebuildClothing()
+
+    local hint = vgui.Create("DLabel", left)
     hint:Dock(TOP)
-    hint:DockMargin(0, 4, 0, 0)
-    hint:SetTall(44)
+    hint:DockMargin(0, 8, 0, 8)
+    hint:SetTall(60)
     hint:SetWrap(true)
     hint:SetTextColor(Color(210, 210, 210))
-    hint:SetText("Kleidung/Bodygroups funktionieren nur, wenn das Model Bodygroups hat und beide Server die gleichen Model-Addons besitzen.")
+    hint:SetText("Die Kleidung wird ueber Skin und Bodygroups gespeichert. Beide Server brauchen dieselben Player-Models und Clothing-Addons.")
 
-    local save = vgui.Create("DButton", parent)
+    local save = vgui.Create("DButton", left)
     save:Dock(TOP)
-    save:DockMargin(0, 12, 0, 0)
-    save:SetTall(36)
-    save:SetText("Speichern und auswaehlen")
+    save:DockMargin(0, 4, 0, 0)
+    save:SetTall(38)
+    save:SetText("Charakter + Kleidung speichern")
     save.DoClick = function()
         local _, model = modelBox:GetSelected()
         model = model or selectedModel or ""
-        local bodygroups = util.JSONToTable(bodygroupsEntry:GetValue() or "{}") or {}
         net.Start("EHChar_SaveCharacter")
-            net.WriteTable({slot = slot, char_name = nameEntry:GetValue(), gender = genderBox:GetValue(), model = model, skin = math.floor(skinSlider:GetValue()), bodygroups = bodygroups})
+            net.WriteTable({
+                slot = slot,
+                char_name = nameEntry:GetValue(),
+                gender = genderBox:GetValue(),
+                model = model,
+                skin = math.floor(skinSlider:GetValue()),
+                bodygroups = bodygroups
+            })
         net.SendToServer()
     end
 end
@@ -157,14 +301,14 @@ end
 
 function EHChar.OpenMenu()
     local frame = vgui.Create("DFrame")
-    frame:SetSize(760, 520)
+    frame:SetSize(900, 620)
     frame:Center()
     frame:SetTitle("EH Character Menu")
     frame:MakePopup()
 
     local left = vgui.Create("DPanel", frame)
     left:Dock(LEFT)
-    left:SetWide(250)
+    left:SetWide(260)
     left:DockMargin(8, 8, 8, 8)
 
     local right = vgui.Create("DPanel", frame)
@@ -199,8 +343,8 @@ function EHChar.OpenMenu()
         local edit = vgui.Create("DButton", left)
         edit:Dock(TOP)
         edit:DockMargin(0, 2, 0, 0)
-        edit:SetTall(24)
-        edit:SetText("Slot " .. slot .. " bearbeiten")
+        edit:SetTall(26)
+        edit:SetText(char and ("Kleidung / Aussehen bearbeiten") or ("Slot " .. slot .. " erstellen"))
         edit.DoClick = function() createEditor(right, slot, getCharacterBySlot(slot)) end
     end
 
