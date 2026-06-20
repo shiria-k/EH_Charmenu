@@ -1,6 +1,11 @@
 EHChar = EHChar or {}
 
 local function notify(ply, text)
+    if not IsValid(ply) then
+        print("[EHChar] " .. tostring(text))
+        return
+    end
+
     net.Start("EHChar_Notify")
         net.WriteString(text)
     net.Send(ply)
@@ -72,6 +77,12 @@ end
 
 function EHChar.OpenMenu(ply)
     if not IsValid(ply) then return end
+
+    if not EHChar.DB or not EHChar.DB.GetCharacters then
+        notify(ply, "Datenbank ist noch nicht bereit. Bitte Server-Console pruefen.")
+        return
+    end
+
     EHChar.DB.GetCharacters(ply, function(chars)
         net.Start("EHChar_SendCharacters")
             net.WriteTable(chars or {})
@@ -83,6 +94,35 @@ end
 
 concommand.Add("eh_chars", function(ply)
     EHChar.OpenMenu(ply)
+end)
+
+concommand.Add("eh_char_debug", function(ply)
+    local modelCount = 0
+    for _ in pairs(EHChar.GetRegisteredPlayerModels()) do
+        modelCount = modelCount + 1
+    end
+
+    local workshopCount = 0
+    if EHChar.Config.WorkshopDownloads and EHChar.Config.WorkshopDownloads.IDs then
+        workshopCount = #EHChar.Config.WorkshopDownloads.IDs
+    end
+
+    local msg = "EH_Charmenu geladen | ServerID=" .. tostring(EHChar.Config.ServerID) .. " | Models=" .. modelCount .. " | WorkshopIDs=" .. workshopCount .. " | MySQL=" .. tostring(EHChar.Config.Database and EHChar.Config.Database.UseMySQL)
+    notify(ply, msg)
+end)
+
+concommand.Add("eh_char_models", function(ply)
+    local models = EHChar.GetRegisteredPlayerModels()
+    local count = 0
+
+    for name, mdl in pairs(models) do
+        count = count + 1
+        if count <= 30 then
+            notify(ply, tostring(name) .. " = " .. tostring(mdl))
+        end
+    end
+
+    notify(ply, "Model-Liste fertig. Gesamt: " .. count .. " Models. Es werden max. 30 einzeln angezeigt.")
 end)
 
 hook.Add("PlayerSay", "EHChar_ChatCommand", function(ply, text)
