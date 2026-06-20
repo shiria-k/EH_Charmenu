@@ -6,10 +6,35 @@ local function notify(ply, text)
     net.Send(ply)
 end
 
-local function isAllowedModel(model)
-    for _, mdl in pairs(EHChar.Config.AllowedModels) do
-        if mdl == model then return true end
+function EHChar.GetRegisteredPlayerModels()
+    local result = {}
+
+    for name, mdl in pairs(EHChar.Config.AllowedModels or {}) do
+        result[name] = mdl
     end
+
+    if EHChar.Config.UseAllRegisteredPlayerModels and player_manager and player_manager.AllValidModels then
+        for name, mdl in pairs(player_manager.AllValidModels()) do
+            result[name] = mdl
+        end
+    end
+
+    return result
+end
+
+local function isAllowedModel(model)
+    model = tostring(model or "")
+
+    for _, mdl in pairs(EHChar.Config.AllowedModels or {}) do
+        if string.lower(mdl) == string.lower(model) then return true end
+    end
+
+    if EHChar.Config.UseAllRegisteredPlayerModels and player_manager and player_manager.AllValidModels then
+        for _, mdl in pairs(player_manager.AllValidModels()) do
+            if string.lower(mdl) == string.lower(model) then return true end
+        end
+    end
+
     return false
 end
 
@@ -103,7 +128,7 @@ net.Receive("EHChar_SaveCharacter", function(_, ply)
 
     if #data.char_name < 3 or #data.char_name > 32 then notify(ply, "Name muss 3 bis 32 Zeichen haben.") return end
     if not isAllowedGender(data.gender) then notify(ply, "Ungueltiges Geschlecht.") return end
-    if not isAllowedModel(data.model) then notify(ply, "Dieses Model ist nicht erlaubt.") return end
+    if not isAllowedModel(data.model) then notify(ply, "Dieses Model ist nicht erlaubt oder auf dem Server nicht installiert.") return end
 
     EHChar.DB.SaveCharacter(ply, data, function()
         notify(ply, "Charakter gespeichert.")
