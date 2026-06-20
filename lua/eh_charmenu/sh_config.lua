@@ -23,9 +23,8 @@ EHChar.Config.UseAllRegisteredPlayerModels = true
 EHChar.Config.WorkshopDownloads = {
     Enabled = true,
     IDs = {
-        -- Hier deine IDs eintragen, z.B.:
-        -- "123456789",
-        -- "987654321"
+    504945881
+    3307292172
     }
 }
 
@@ -36,12 +35,12 @@ EHChar.Config.WorkshopDownloads = {
 -- SQLite ist nur fuer Tests auf einem einzelnen Server.
 -- Fuer Server 1 + Server 2 zusammen muss UseMySQL = true sein.
 EHChar.Config.Database = {
-    UseMySQL = false,
-    Host = "127.0.0.1",
+    UseMySQL = true,
+    Host = "148.251.103.136",
     Port = 3306,
-    Database = "gmod_chars",
-    Username = "gmod_user",
-    Password = "change_me"
+    Database = "s1_Charmenu",
+    Username = "u1_z45e1SIhZ4",
+    Password = "rGTUqN7uSi.@2kd+4tIy^fb="
 }
 
 -- =========================================================
@@ -72,119 +71,4 @@ EHChar.Config.Genders = {
     "Maennlich",
     "Weiblich",
     "Divers"
-}
-
--- =========================================================
--- DarkRP Jobs fuer Server 2 Stadt
--- =========================================================
-
--- Wichtig:
--- teamName muss genau so heissen wie dein DarkRP-Job.
--- Wenn dein Job in DarkRP z.B. "Polizist" heisst,
--- muss hier teamName = "Polizist" stehen.
-EHChar.Config.DarkRPJobs = {
-    Enabled = true,
-    Jobs = {
-        police = {
-            title = "Polizei",
-            teamName = "Polizei",
-            ranks = {
-                ["Anwaerter"] = {
-                    model = "models/player/police.mdl",
-                    loadout = {
-                        "weapon_stunstick",
-                        "weapon_pistol"
-                    }
-                },
-                ["Officer"] = {
-                    model = "models/player/police.mdl",
-                    loadout = {
-                        "weapon_stunstick",
-                        "weapon_pistol",
-                        "arrest_stick",
-                        "unarrest_stick"
-                    }
-                },
-                ["Sergeant"] = {
-                    model = "models/player/police.mdl",
-                    loadout = {
-                        "weapon_stunstick",
-                        "weapon_pistol",
-                        "weapon_smg1",
-                        "arrest_stick",
-                        "unarrest_stick"
-                    }
-                }
-            }
-        },
-
-        military = {
-            title = "Militaer",
-            teamName = "Militaer",
-            ranks = {
-                ["Rekrut"] = {
-                    model = "models/player/riot.mdl",
-                    loadout = {
-                        "weapon_pistol"
-                    }
-                },
-                ["Soldat"] = {
-                    model = "models/player/riot.mdl",
-                    loadout = {
-                        "weapon_pistol",
-                        "weapon_smg1"
-                    }
-                },
-                ["Commander"] = {
-                    model = "models/player/riot.mdl",
-                    loadout = {
-                        "weapon_pistol",
-                        "weapon_smg1",
-                        "weapon_shotgun"
-                    }
-                }
-            }
-        },
-
-        quarantine = {
-            title = "Quarantaene-Einheit",
-            teamName = "Quarantaene-Einheit",
-            ranks = {
-                ["Helfer"] = {
-                    model = "models/player/group03/male_07.mdl",
-                    loadout = {
-                        "weapon_pistol"
-                    }
-                },
-                ["Seuchenschutz"] = {
-                    model = "models/player/riot.mdl",
-                    loadout = {
-                        "weapon_pistol",
-                        "weapon_smg1"
-                    }
-                },
-                ["Einsatzleiter"] = {
-                    model = "models/player/riot.mdl",
-                    loadout = {
-                        "weapon_pistol",
-                        "weapon_smg1",
-                        "weapon_shotgun"
-                    }
-                }
-            }
-        },
-
-        medic = {
-            title = "Medic",
-            teamName = "Medic",
-            ranks = {
-                ["Sanitaeter"] = {
-                    model = "models/player/kleiner.mdl",
-                    loadout = {
-                        "weapon_medkit"
-                    }
-                }
-            }
-        }
-    }
 }
