@@ -57,6 +57,24 @@ Auf Server 2 Stadt / DarkRP:
 EHChar.Config.ServerID = "stadt"
 ```
 
+## Workshop-Modelpacks
+
+EH_Charmenu kann automatisch alle PlayerModels nutzen, die durch Workshop-Addons registriert werden.
+
+Dafuer ist in der Config aktiv:
+
+```lua
+EHChar.Config.UseAllRegisteredPlayerModels = true
+```
+
+Damit koennen z.B. diese Addons im Menue erscheinen, wenn sie installiert sind:
+
+- RP Models BIG Pack
+- Enhanced PlayerModel Selector
+- andere PlayerModel-/Clothing-Packs
+
+Wichtig: Die Addon-Dateien selbst werden nicht in EH_Charmenu kopiert. Die Workshop-Addons muessen weiterhin auf Server und Client vorhanden sein.
+
 ## Datenbank
 
 In `sh_config.lua` kannst du MySQL aktivieren:
