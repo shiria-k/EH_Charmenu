@@ -9,12 +9,14 @@ Gemeinsames Charakter-Menue fuer zwei Garry's-Mod-Server.
 - Geschlecht auswaehlen
 - Model / Aussehen auswaehlen
 - Skin einstellen
-- Bodygroups speichern
+- Kleidung ueber Bodygroups veraendern
+- Model-Vorschau im Menue
 - Charakter wieder auswaehlen
 
 ## Server 2 Stadt / DarkRP
 
 - dieselben Charaktere laden
+- gespeicherte Kleidung laden
 - zusaetzlich Jobdaten
 - Rang speichern
 - Job-Kleidung setzen
@@ -79,8 +81,41 @@ Konsole:
 eh_chars
 ```
 
+## Kleidung bearbeiten
+
+Im Menue gibt es jetzt bei jedem Slot den Button:
+
+```txt
+Kleidung / Aussehen bearbeiten
+```
+
+Dort kannst du:
+
+- Model / Grundkoerper auswaehlen
+- Skin / Variante einstellen
+- Bodygroups per Schieberegler veraendern
+- eine Model-Vorschau sehen
+- die Kleidung speichern
+
+Die Bodygroup-Regler werden automatisch aus dem gewaehlten Model erzeugt.
+Wenn ein Model keine Kleidungsteile anzeigt, hat dieses Model keine Bodygroups.
+
 ## Hinweis zu Kleidung
 
-Diese Basis speichert Model, Skin und Bodygroups.
-Ein richtiges Kleidungssystem mit Shop, Vorschau, Haaren, Bart, Jacken, Hosen und Items muss spaeter als Erweiterung eingebaut werden.
-Beide Server muessen dieselben Model- und Kleidungs-Addons haben, sonst laden Charaktere falsch.
+Das Menue speichert aktuell:
+
+- Model
+- Skin
+- Bodygroups
+
+Beide Server muessen dieselben Player-Models und Clothing-Addons haben.
+Sonst kann Server 2 die gespeicherte Kleidung nicht richtig laden.
+
+Fuer ein spaeteres Premium-System kann man noch einbauen:
+
+- Kleider-Shop
+- Haare / Bart
+- Jacken / Hosen / Schuhe als Items
+- Admin-Freigabe fuer Fraktionskleidung
+- Speichern von Outfits
+- Kleidung nur fuer bestimmte Jobs
