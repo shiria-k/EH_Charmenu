@@ -17,9 +17,30 @@ end
 
 local function modelChoices()
     local choices = {}
-    for name, mdl in pairs(EHChar.Config.AllowedModels) do
+    local used = {}
+
+    local function addChoice(name, mdl)
+        name = tostring(name or "Unbenannt")
+        mdl = tostring(mdl or "")
+        if mdl == "" then return end
+
+        local key = string.lower(mdl)
+        if used[key] then return end
+        used[key] = true
+
         choices[#choices + 1] = {name = name, model = mdl}
     end
+
+    for name, mdl in pairs(EHChar.Config.AllowedModels or {}) do
+        addChoice(name, mdl)
+    end
+
+    if EHChar.Config.UseAllRegisteredPlayerModels and player_manager and player_manager.AllValidModels then
+        for name, mdl in pairs(player_manager.AllValidModels()) do
+            addChoice(name, mdl)
+        end
+    end
+
     table.SortByMember(choices, "name", true)
     return choices
 end
@@ -142,13 +163,14 @@ local function createEditor(parent, slot, existing)
     modelBox:SetValue("Model / Grundkoerper auswaehlen")
 
     local selectedModel = existing and tostring(existing.model or "") or nil
-    for _, choice in ipairs(modelChoices()) do
+    local choices = modelChoices()
+    for _, choice in ipairs(choices) do
         modelBox:AddChoice(choice.name, choice.model)
         if selectedModel == choice.model then modelBox:SetValue(choice.name) end
     end
 
     if not selectedModel or selectedModel == "" then
-        local first = modelChoices()[1]
+        local first = choices[1]
         selectedModel = first and first.model or "models/player/group01/male_01.mdl"
     end
 
