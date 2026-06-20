@@ -1,19 +1,40 @@
 EHChar = EHChar or {}
 EHChar.Config = EHChar.Config or {}
 
--- Auf Server 1 Metro: "metro"
--- Auf Server 2 Stadt/DarkRP: "stadt"
+-- =========================================================
+-- EH_Charmenu Haupt-Config
+-- =========================================================
+
+-- Server 1 Metro: "metro"
+-- Server 2 Stadt / DarkRP: "stadt"
 EHChar.Config.ServerID = "metro"
+
+-- Anzahl Charakterplaetze pro Spieler
 EHChar.Config.MaxSlots = 3
 
--- Wenn true, werden automatisch alle Playermodels genutzt,
--- die durch Workshop-Addons registriert werden.
--- Damit funktionieren z.B. RP Models BIG Pack und Enhanced PlayerModel Selector,
--- sobald die Addons auf Server und Client installiert/abonniert sind.
+-- Automatisch alle registrierten Workshop-PlayerModels im Menue anzeigen
+-- Funktioniert mit PlayerModel-Packs, sobald sie auf Server/Client geladen sind.
 EHChar.Config.UseAllRegisteredPlayerModels = true
 
--- Fuer echte 2-Server-Synchronisierung MUSS MySQL true sein.
--- SQLite ist nur fuer einen Testserver gedacht.
+-- Workshop-Downloads fuer Spieler beim Joinen.
+-- Hier kommen nur Steam Workshop IDs rein.
+-- Beispiel-Link: https://steamcommunity.com/sharedfiles/filedetails/?id=123456789
+-- Dann ist die ID: "123456789"
+EHChar.Config.WorkshopDownloads = {
+    Enabled = true,
+    IDs = {
+        -- Hier deine IDs eintragen, z.B.:
+        -- "123456789",
+        -- "987654321"
+    }
+}
+
+-- =========================================================
+-- Datenbank
+-- =========================================================
+
+-- SQLite ist nur fuer Tests auf einem einzelnen Server.
+-- Fuer Server 1 + Server 2 zusammen muss UseMySQL = true sein.
 EHChar.Config.Database = {
     UseMySQL = false,
     Host = "127.0.0.1",
@@ -23,7 +44,11 @@ EHChar.Config.Database = {
     Password = "change_me"
 }
 
--- Manuelle Fallback-Models. Diese bleiben immer im Menue.
+-- =========================================================
+-- Fallback-PlayerModels
+-- =========================================================
+
+-- Diese Models sind immer im Menue, auch wenn keine Workshop-Models geladen sind.
 EHChar.Config.AllowedModels = {
     ["Mann 01"] = "models/player/group01/male_01.mdl",
     ["Mann 02"] = "models/player/group01/male_02.mdl",
@@ -42,9 +67,21 @@ EHChar.Config.AllowedModels = {
     ["Frau 07"] = "models/player/group01/female_07.mdl"
 }
 
-EHChar.Config.Genders = {"Maennlich", "Weiblich", "Divers"}
+-- Geschlechter im Charakter-Menue
+EHChar.Config.Genders = {
+    "Maennlich",
+    "Weiblich",
+    "Divers"
+}
 
--- Nur auf ServerID "stadt" verwenden.
+-- =========================================================
+-- DarkRP Jobs fuer Server 2 Stadt
+-- =========================================================
+
+-- Wichtig:
+-- teamName muss genau so heissen wie dein DarkRP-Job.
+-- Wenn dein Job in DarkRP z.B. "Polizist" heisst,
+-- muss hier teamName = "Polizist" stehen.
 EHChar.Config.DarkRPJobs = {
     Enabled = true,
     Jobs = {
@@ -52,25 +89,101 @@ EHChar.Config.DarkRPJobs = {
             title = "Polizei",
             teamName = "Polizei",
             ranks = {
-                ["Anwaerter"] = {model = "models/player/police.mdl", loadout = {"weapon_stunstick", "weapon_pistol"}},
-                ["Officer"] = {model = "models/player/police.mdl", loadout = {"weapon_stunstick", "weapon_pistol", "arrest_stick", "unarrest_stick"}},
-                ["Sergeant"] = {model = "models/player/police.mdl", loadout = {"weapon_stunstick", "weapon_pistol", "weapon_smg1", "arrest_stick", "unarrest_stick"}}
+                ["Anwaerter"] = {
+                    model = "models/player/police.mdl",
+                    loadout = {
+                        "weapon_stunstick",
+                        "weapon_pistol"
+                    }
+                },
+                ["Officer"] = {
+                    model = "models/player/police.mdl",
+                    loadout = {
+                        "weapon_stunstick",
+                        "weapon_pistol",
+                        "arrest_stick",
+                        "unarrest_stick"
+                    }
+                },
+                ["Sergeant"] = {
+                    model = "models/player/police.mdl",
+                    loadout = {
+                        "weapon_stunstick",
+                        "weapon_pistol",
+                        "weapon_smg1",
+                        "arrest_stick",
+                        "unarrest_stick"
+                    }
+                }
             }
         },
+
         military = {
             title = "Militaer",
             teamName = "Militaer",
             ranks = {
-                ["Rekrut"] = {model = "models/player/riot.mdl", loadout = {"weapon_pistol"}},
-                ["Soldat"] = {model = "models/player/riot.mdl", loadout = {"weapon_pistol", "weapon_smg1"}},
-                ["Commander"] = {model = "models/player/riot.mdl", loadout = {"weapon_pistol", "weapon_smg1", "weapon_shotgun"}}
+                ["Rekrut"] = {
+                    model = "models/player/riot.mdl",
+                    loadout = {
+                        "weapon_pistol"
+                    }
+                },
+                ["Soldat"] = {
+                    model = "models/player/riot.mdl",
+                    loadout = {
+                        "weapon_pistol",
+                        "weapon_smg1"
+                    }
+                },
+                ["Commander"] = {
+                    model = "models/player/riot.mdl",
+                    loadout = {
+                        "weapon_pistol",
+                        "weapon_smg1",
+                        "weapon_shotgun"
+                    }
+                }
             }
         },
+
+        quarantine = {
+            title = "Quarantaene-Einheit",
+            teamName = "Quarantaene-Einheit",
+            ranks = {
+                ["Helfer"] = {
+                    model = "models/player/group03/male_07.mdl",
+                    loadout = {
+                        "weapon_pistol"
+                    }
+                },
+                ["Seuchenschutz"] = {
+                    model = "models/player/riot.mdl",
+                    loadout = {
+                        "weapon_pistol",
+                        "weapon_smg1"
+                    }
+                },
+                ["Einsatzleiter"] = {
+                    model = "models/player/riot.mdl",
+                    loadout = {
+                        "weapon_pistol",
+                        "weapon_smg1",
+                        "weapon_shotgun"
+                    }
+                }
+            }
+        },
+
         medic = {
             title = "Medic",
             teamName = "Medic",
             ranks = {
-                ["Sanitaeter"] = {model = "models/player/kleiner.mdl", loadout = {"weapon_medkit"}}
+                ["Sanitaeter"] = {
+                    model = "models/player/kleiner.mdl",
+                    loadout = {
+                        "weapon_medkit"
+                    }
+                }
             }
         }
     }
