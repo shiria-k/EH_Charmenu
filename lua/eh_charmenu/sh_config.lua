@@ -6,6 +6,12 @@ EHChar.Config = EHChar.Config or {}
 EHChar.Config.ServerID = "metro"
 EHChar.Config.MaxSlots = 3
 
+-- Wenn true, werden automatisch alle Playermodels genutzt,
+-- die durch Workshop-Addons registriert werden.
+-- Damit funktionieren z.B. RP Models BIG Pack und Enhanced PlayerModel Selector,
+-- sobald die Addons auf Server und Client installiert/abonniert sind.
+EHChar.Config.UseAllRegisteredPlayerModels = true
+
 -- Fuer echte 2-Server-Synchronisierung MUSS MySQL true sein.
 -- SQLite ist nur fuer einen Testserver gedacht.
 EHChar.Config.Database = {
@@ -17,6 +23,7 @@ EHChar.Config.Database = {
     Password = "change_me"
 }
 
+-- Manuelle Fallback-Models. Diese bleiben immer im Menue.
 EHChar.Config.AllowedModels = {
     ["Mann 01"] = "models/player/group01/male_01.mdl",
     ["Mann 02"] = "models/player/group01/male_02.mdl",
