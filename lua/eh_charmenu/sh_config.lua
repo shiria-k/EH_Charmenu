@@ -5,26 +5,15 @@ EHChar.Config = EHChar.Config or {}
 -- EH_Charmenu Haupt-Config
 -- =========================================================
 
--- Server 1 Metro: "metro"
--- Server 2 Stadt / DarkRP: "stadt"
 EHChar.Config.ServerID = "metro"
-
--- Anzahl Charakterplaetze pro Spieler
 EHChar.Config.MaxSlots = 3
-
--- Automatisch alle registrierten Workshop-PlayerModels im Menue anzeigen
--- Funktioniert mit PlayerModel-Packs, sobald sie auf Server/Client geladen sind.
 EHChar.Config.UseAllRegisteredPlayerModels = true
 
--- Workshop-Downloads fuer Spieler beim Joinen.
--- Hier kommen nur Steam Workshop IDs rein.
--- Beispiel-Link: https://steamcommunity.com/sharedfiles/filedetails/?id=123456789
--- Dann ist die ID: "123456789"
 EHChar.Config.WorkshopDownloads = {
     Enabled = true,
     IDs = {
-    504945881
-    3307292172
+        "504945881",
+        "3307292172"
     }
 }
 
@@ -32,22 +21,30 @@ EHChar.Config.WorkshopDownloads = {
 -- Datenbank
 -- =========================================================
 
--- SQLite ist nur fuer Tests auf einem einzelnen Server.
--- Fuer Server 1 + Server 2 zusammen muss UseMySQL = true sein.
+-- WICHTIG: Dieses Repo ist oeffentlich.
+-- Trage echte SQL-Daten erst nach dem Upload auf dem Server ein.
 EHChar.Config.Database = {
     UseMySQL = true,
-    Host = "148.251.103.136",
+    Host = "DEINE_SQL_IP_ODER_HOST",
     Port = 3306,
-    Database = "s1_Charmenu",
-    Username = "u1_z45e1SIhZ4",
-    Password = "rGTUqN7uSi.@2kd+4tIy^fb="
+    Database = "DEINE_DATENBANK",
+    Username = "DEIN_SQL_USER",
+    Password = "DEIN_SQL_PASSWORT",
+
+    AutoReconnect = true,
+    ReconnectDelay = 10,
+    StrictMySQL = true
+}
+
+EHChar.Config.DarkRPJobs = EHChar.Config.DarkRPJobs or {
+    Enabled = false,
+    Jobs = {}
 }
 
 -- =========================================================
 -- Fallback-PlayerModels
 -- =========================================================
 
--- Diese Models sind immer im Menue, auch wenn keine Workshop-Models geladen sind.
 EHChar.Config.AllowedModels = {
     ["Mann 01"] = "models/player/group01/male_01.mdl",
     ["Mann 02"] = "models/player/group01/male_02.mdl",
@@ -66,7 +63,6 @@ EHChar.Config.AllowedModels = {
     ["Frau 07"] = "models/player/group01/female_07.mdl"
 }
 
--- Geschlechter im Charakter-Menue
 EHChar.Config.Genders = {
     "Maennlich",
     "Weiblich",
