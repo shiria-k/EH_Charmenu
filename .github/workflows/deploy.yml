@@ -13,6 +13,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Create GMA File
+        uses: themetallian/gmad-action@v1
+        with:
+          folder: '.'          # Punkt bedeutet: Das gesamte Repository wird verpackt
+          output: 'Charmenu.gma'  # Der Name der
+
       - name: Publish to Workshop
         uses: m00nl1ght-dev/steam-workshop-deploy@v1
         with:
