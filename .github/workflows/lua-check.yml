@@ -19,7 +19,7 @@ jobs:
       - name: Install Lua 5.1
         run: |
           sudo apt-get update
-          sudo apt-get install -y lua5.1
+          sudo apt-get install -y lua5.1 rsync zip
 
       - name: Check Lua syntax
         run: |
@@ -37,17 +37,24 @@ jobs:
           test -f addon.json
           test -f lua/autorun/eh_charmenu_loader.lua
           test -f lua/eh_charmenu/sh_config.lua
+          test -f lua/eh_charmenu/sv_config.lua
           test -f lua/eh_charmenu/sv_database.lua
+          test -f lua/eh_charmenu/sv_resources.lua
+          test -f lua/eh_charmenu/sv_version.lua
           test -f lua/eh_charmenu/sv_core.lua
           test -f lua/eh_charmenu/cl_menu.lua
           echo "Addon structure OK"
 
-      - name: Check public config placeholders
+      - name: Check SQL config safety
         run: |
           set -e
-          grep -q "DEINE_SQL_IP_ODER_HOST" lua/eh_charmenu/sh_config.lua
-          grep -q "DEIN_SQL_PASSWORT" lua/eh_charmenu/sh_config.lua
-          echo "Public SQL placeholders OK"
+          grep -q "DEINE_SQL_IP_ODER_HOST" lua/eh_charmenu/sv_config.lua
+          grep -q "DEIN_SQL_PASSWORT" lua/eh_charmenu/sv_config.lua
+          if grep -q "Password" lua/eh_charmenu/sh_config.lua; then
+            echo "SQL password field must not be in shared config"
+            exit 1
+          fi
+          echo "SQL config safety OK"
 
       - name: Build ZIP artifact
         run: |
