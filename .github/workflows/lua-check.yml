@@ -1,0 +1,64 @@
+name: Lua Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lua-check:
+    name: Check Lua files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Lua 5.1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.1
+
+      - name: Check Lua syntax
+        run: |
+          set -e
+          echo "Checking Lua files..."
+          find lua -type f -name "*.lua" -print0 | while IFS= read -r -d '' file; do
+            echo "Checking $file"
+            luac5.1 -p "$file"
+          done
+          echo "Lua syntax OK"
+
+      - name: Check addon structure
+        run: |
+          set -e
+          test -f addon.json
+          test -f lua/autorun/eh_charmenu_loader.lua
+          test -f lua/eh_charmenu/sh_config.lua
+          test -f lua/eh_charmenu/sv_database.lua
+          test -f lua/eh_charmenu/sv_core.lua
+          test -f lua/eh_charmenu/cl_menu.lua
+          echo "Addon structure OK"
+
+      - name: Check public config placeholders
+        run: |
+          set -e
+          grep -q "DEINE_SQL_IP_ODER_HOST" lua/eh_charmenu/sh_config.lua
+          grep -q "DEIN_SQL_PASSWORT" lua/eh_charmenu/sh_config.lua
+          echo "Public SQL placeholders OK"
+
+      - name: Build ZIP artifact
+        run: |
+          set -e
+          mkdir -p build/EH_Charmenu
+          rsync -av --exclude='.git' --exclude='.github' --exclude='build' ./ build/EH_Charmenu/
+          cd build
+          zip -r EH_Charmenu.zip EH_Charmenu
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EH_Charmenu
+          path: build/EH_Charmenu.zip
