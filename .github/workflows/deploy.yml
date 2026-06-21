@@ -1,0 +1,29 @@
+name: Upload to Steam Workshop
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Publish to Workshop
+        uses: m00nl1ght-dev/steam-workshop-deploy@v1
+        with:
+          appId: '4000' # Falls es Garry's Mod ist
+          publishedFileId: '?id=123456789)'
+          path: '.'
+          changelog: 'Automatisches Update via GitHub vom Smartphone'
+        env:
+          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+          STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
+          # Diese drei Zeilen erlauben GitHub, den Code aus deiner E-Mail zu lesen:
+          STEAM_AUTHENTICATOR_EMAIL: ${{ secrets.EMAIL_USERNAME }}
+          STEAM_AUTHENTICATOR_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          STEAM_AUTHENTICATOR_IMAP: '://gmail.com' # Z.B. ://gmail.com oder ://yahoo.com
