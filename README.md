@@ -1,41 +1,100 @@
 # EH_Charmenu
 
-Gemeinsames Charakter-Menue fuer zwei Garry's-Mod-Server.
+Gemeinsames Charakter-Menue fuer zwei Garry's-Mod-Server mit gemeinsamer SQL-Datenbank.
 
-## Server 1 Metro
+## Funktionen
 
-- 3 Charakterplaetze
+- 3 Charakterplaetze pro Spieler
 - Name erstellen
 - Geschlecht auswaehlen
-- Model / Aussehen auswaehlen
+- PlayerModel auswaehlen
 - Skin einstellen
-- Kleidung ueber Bodygroups veraendern
+- Kleidung ueber Bodygroups speichern
 - Model-Vorschau im Menue
-- Charakter wieder auswaehlen
+- Charakter auf mehreren Servern nutzen
+- DarkRP-Jobdaten optional speichern
 
-## Server 2 Stadt / DarkRP
+## Ordnerstruktur
 
-- dieselben Charaktere laden
-- gespeicherte Kleidung laden
-- zusaetzlich Jobdaten
-- Rang speichern
-- Job-Kleidung setzen
-- Job-Ausruestung geben
-
-## Wichtig
-
-Fuer echte Synchronisierung zwischen Server 1 und Server 2 brauchst du MySQL oder MariaDB.
-SQLite ist nur fuer Tests auf einem einzelnen Server gedacht.
-
-## Installation
-
-Diesen Ordner auf beide Server hochladen:
+Der Addon-Ordner muss so liegen:
 
 ```txt
 garrysmod/addons/EH_Charmenu/
+├─ addon.json
+├─ lua/
+│  ├─ autorun/
+│  │  └─ eh_charmenu_loader.lua
+│  └─ eh_charmenu/
+│     ├─ sh_config.lua
+│     ├─ sv_config.lua
+│     ├─ sv_database.lua
+│     ├─ sv_resources.lua
+│     ├─ sv_version.lua
+│     ├─ sv_core.lua
+│     └─ cl_menu.lua
 ```
 
-Danach Server neu starten.
+## Installation auf Pterodactyl
+
+1. Repository als ZIP herunterladen.
+2. Alten Ordner `EH_Charmenu` loeschen.
+3. Neuen Ordner nach `garrysmod/addons/EH_Charmenu/` hochladen.
+4. SQL-Daten in `lua/eh_charmenu/sv_config.lua` eintragen.
+5. Server komplett neu starten.
+
+## SQL einrichten
+
+SQL-Daten kommen nur hier rein:
+
+```txt
+lua/eh_charmenu/sv_config.lua
+```
+
+Beispiel:
+
+```lua
+EHChar.Config.Database = {
+    UseMySQL = true,
+    Host = "DEINE_SQL_IP_ODER_HOST",
+    Port = 3306,
+    Database = "DEINE_DATENBANK",
+    Username = "DEIN_SQL_USER",
+    Password = "DEIN_SQL_PASSWORT",
+    AutoReconnect = true,
+    ReconnectDelay = 10,
+    StrictMySQL = true
+}
+```
+
+Wichtig: Bei externer Datenbank nicht `127.0.0.1` oder `localhost` nutzen. Nimm die echte Datenbank-IP oder den Hostnamen.
+
+Der MySQL-User muss externe Verbindungen vom GMod-Server erlauben.
+
+## Benötigtes Modul
+
+Fuer MySQL braucht Garry's Mod das Modul `mysqloo`.
+
+Wenn im Log steht:
+
+```txt
+mysqloo konnte nicht geladen werden
+```
+
+muss `mysqloo` nach `garrysmod/lua/bin/` installiert und der Server neu gestartet werden.
+
+## Erwarteter Server-Log
+
+Nach einem erfolgreichen Start sollte im Log stehen:
+
+```txt
+[EH_Charmenu] Loader gestartet | Version 0.1.4
+[EH_Charmenu] Geladen: eh_charmenu/sh_config.lua
+[EH_Charmenu] Geladen: eh_charmenu/sv_config.lua
+[EH_Charmenu] Geladen: eh_charmenu/sv_database.lua
+[EH_Charmenu] Server-Dateien geladen
+[EHChar SQL] Verbinde zu MySQL:
+[EHChar SQL] MySQL verbunden.
+```
 
 ## Server-ID einstellen
 
@@ -45,45 +104,38 @@ Datei:
 lua/eh_charmenu/sh_config.lua
 ```
 
-Auf Server 1 Metro:
+Metro-Server:
 
 ```lua
 EHChar.Config.ServerID = "metro"
 ```
 
-Auf Server 2 Stadt / DarkRP:
+Stadt-/DarkRP-Server:
 
 ```lua
 EHChar.Config.ServerID = "stadt"
 ```
 
-## Workshop-Modelpacks
+Beide Server muessen dieselbe SQL-Datenbank nutzen, wenn die Charaktere synchron sein sollen.
 
-EH_Charmenu kann automatisch alle PlayerModels nutzen, die durch Workshop-Addons registriert werden.
+## Steam Workshop vorbereiten
 
-Dafuer ist in der Config aktiv:
+Dieses Addon ist fuer gmpublisher/gmad vorbereitet.
 
-```lua
-EHChar.Config.UseAllRegisteredPlayerModels = true
-```
+Wichtig fuer Workshop:
 
-Damit koennen z.B. diese Addons im Menue erscheinen, wenn sie installiert sind:
+- `addon.json` muss im Hauptordner liegen.
+- Der Ordner muss direkt `lua/` enthalten.
+- Keine echten SQL-Passwoerter in das Workshop-Addon packen.
+- SQL-Daten nach Installation auf dem Server in `sv_config.lua` eintragen.
 
-- RP Models BIG Pack
-- Enhanced PlayerModel Selector
-- andere PlayerModel-/Clothing-Packs
+Mit gmpublisher:
 
-Wichtig: Die Addon-Dateien selbst werden nicht in EH_Charmenu kopiert. Die Workshop-Addons muessen weiterhin auf Server und Client vorhanden sein.
-
-## Datenbank
-
-In `sh_config.lua` kannst du MySQL aktivieren:
-
-```lua
-EHChar.Config.Database.UseMySQL = true
-```
-
-Beide Server muessen dann dieselbe Datenbank verwenden.
+1. Addon-Ordner `EH_Charmenu` auswaehlen.
+2. Titel: `EH Charmenu`
+3. Typ: `ServerContent`
+4. Tags: `roleplay`, `fun`
+5. Veröffentlichen oder aktualisieren.
 
 ## Befehle
 
@@ -91,6 +143,8 @@ Chat:
 
 ```txt
 /chars
+!chars
+/char
 ```
 
 Konsole:
@@ -99,41 +153,20 @@ Konsole:
 eh_chars
 ```
 
-## Kleidung bearbeiten
-
-Im Menue gibt es jetzt bei jedem Slot den Button:
+Debug:
 
 ```txt
-Kleidung / Aussehen bearbeiten
+eh_char_debug
 ```
 
-Dort kannst du:
+## Datenbanktabellen
 
-- Model / Grundkoerper auswaehlen
-- Skin / Variante einstellen
-- Bodygroups per Schieberegler veraendern
-- eine Model-Vorschau sehen
-- die Kleidung speichern
+Das Addon erstellt automatisch:
 
-Die Bodygroup-Regler werden automatisch aus dem gewaehlten Model erzeugt.
-Wenn ein Model keine Kleidungsteile anzeigt, hat dieses Model keine Bodygroups.
+```txt
+eh_characters
+eh_character_jobs
+eh_charmenu_meta
+```
 
-## Hinweis zu Kleidung
-
-Das Menue speichert aktuell:
-
-- Model
-- Skin
-- Bodygroups
-
-Beide Server muessen dieselben Player-Models und Clothing-Addons haben.
-Sonst kann Server 2 die gespeicherte Kleidung nicht richtig laden.
-
-Fuer ein spaeteres Premium-System kann man noch einbauen:
-
-- Kleider-Shop
-- Haare / Bart
-- Jacken / Hosen / Schuhe als Items
-- Admin-Freigabe fuer Fraktionskleidung
-- Speichern von Outfits
-- Kleidung nur fuer bestimmte Jobs
+`eh_charmenu_meta` speichert die installierte Version und ob im Repo eine neuere Version gefunden wurde.
