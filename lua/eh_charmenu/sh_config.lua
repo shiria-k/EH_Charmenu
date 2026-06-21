@@ -2,7 +2,10 @@ EHChar = EHChar or {}
 EHChar.Config = EHChar.Config or {}
 
 -- =========================================================
--- EH_Charmenu Haupt-Config
+-- EH_Charmenu Shared Config
+-- Diese Datei wird auch an Clients gesendet.
+-- Hier NIEMALS SQL-Passwoerter eintragen.
+-- SQL-Daten gehoeren in: lua/eh_charmenu/sv_config.lua
 -- =========================================================
 
 EHChar.Config.ServerID = "metro"
@@ -15,25 +18,6 @@ EHChar.Config.WorkshopDownloads = {
         "504945881",
         "3307292172"
     }
-}
-
--- =========================================================
--- Datenbank
--- =========================================================
-
--- WICHTIG: Dieses Repo ist oeffentlich.
--- Trage echte SQL-Daten erst nach dem Upload auf dem Server ein.
-EHChar.Config.Database = {
-    UseMySQL = true,
-    Host = "DEINE_SQL_IP_ODER_HOST",
-    Port = 3306,
-    Database = "DEINE_DATENBANK",
-    Username = "DEIN_SQL_USER",
-    Password = "DEIN_SQL_PASSWORT",
-
-    AutoReconnect = true,
-    ReconnectDelay = 10,
-    StrictMySQL = true
 }
 
 EHChar.Config.DarkRPJobs = EHChar.Config.DarkRPJobs or {
