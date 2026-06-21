@@ -1,5 +1,5 @@
 EHChar = EHChar or {}
-EHChar.Version = "0.1.3"
+EHChar.Version = "0.1.4"
 
 local PREFIX = "[EH_Charmenu] "
 
@@ -24,13 +24,15 @@ end
 
 ehPrint("Loader gestartet | Version " .. EHChar.Version)
 
--- Diese Datei liegt in lua/autorun/ und nutzt deshalb Pfade ab lua/.
--- Wichtig: sh_config.lua wird an Clients gesendet, damit cl_menu.lua EHChar.Config kennt.
+-- Shared config wird auch an Clients gesendet.
+-- In sh_config.lua duerfen keine SQL-Passwoerter stehen.
 safeInclude("eh_charmenu/sh_config.lua", true)
 
 if SERVER then
     AddCSLuaFile("eh_charmenu/cl_menu.lua")
 
+    -- Server-only config enthaelt SQL-Daten und wird NICHT an Clients gesendet.
+    safeInclude("eh_charmenu/sv_config.lua", false)
     safeInclude("eh_charmenu/sv_resources.lua", false)
     safeInclude("eh_charmenu/sv_database.lua", false)
     safeInclude("eh_charmenu/sv_version.lua", false)
