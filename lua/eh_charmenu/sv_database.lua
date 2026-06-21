@@ -1,5 +1,8 @@
 EHChar = EHChar or {}
 EHChar.DB = EHChar.DB or {}
+EHChar.DB.Pending = EHChar.DB.Pending or {}
+EHChar.DB.Ready = false
+EHChar.DB.Connecting = false
 
 util.AddNetworkString("EHChar_OpenMenu")
 util.AddNetworkString("EHChar_RequestCharacters")
@@ -9,10 +12,14 @@ util.AddNetworkString("EHChar_SelectCharacter")
 util.AddNetworkString("EHChar_SaveJobData")
 util.AddNetworkString("EHChar_Notify")
 
+local function dbPrint(text)
+    print("[EHChar SQL] " .. tostring(text))
+end
+
 local function esc(value)
     value = tostring(value or "")
 
-    if EHChar.DB.IsMySQL and EHChar.DB.Connection then
+    if EHChar.DB.IsMySQL and EHChar.DB.Connection and EHChar.DB.Ready then
         return EHChar.DB.Connection:escape(value)
     end
 
@@ -23,28 +30,50 @@ local function mysqlReady()
     return EHChar.DB.IsMySQL and EHChar.DB.Connection and EHChar.DB.Ready
 end
 
+local function runMysqlQuery(query, onSuccess, onError)
+    local q = EHChar.DB.Connection:query(query)
+
+    function q:onSuccess(data)
+        if onSuccess then onSuccess(data or {}) end
+    end
+
+    function q:onError(err)
+        dbPrint("MySQL Fehler: " .. tostring(err))
+        dbPrint("Query: " .. tostring(query))
+        if onError then onError(err) end
+    end
+
+    q:start()
+end
+
+function EHChar.DB.FlushPending()
+    if not mysqlReady() then return end
+
+    local pending = EHChar.DB.Pending or {}
+    EHChar.DB.Pending = {}
+
+    if #pending > 0 then
+        dbPrint("Fuehre wartende Queries aus: " .. #pending)
+    end
+
+    for _, item in ipairs(pending) do
+        runMysqlQuery(item.query, item.onSuccess, item.onError)
+    end
+end
+
 function EHChar.DB.Query(query, onSuccess, onError)
     if EHChar.DB.IsMySQL then
-        if not EHChar.DB.Connection then
-            local err = "MySQL Verbindung nicht vorhanden."
-            print("[EHChar] " .. err)
-            if onError then onError(err) end
+        if not mysqlReady() then
+            EHChar.DB.Pending[#EHChar.DB.Pending + 1] = {
+                query = query,
+                onSuccess = onSuccess,
+                onError = onError
+            }
+            dbPrint("Query wartet, MySQL ist noch nicht bereit.")
             return
         end
 
-        local q = EHChar.DB.Connection:query(query)
-
-        function q:onSuccess(data)
-            if onSuccess then onSuccess(data or {}) end
-        end
-
-        function q:onError(err)
-            print("[EHChar] MySQL Fehler: " .. tostring(err))
-            print("[EHChar] Query: " .. tostring(query))
-            if onError then onError(err) end
-        end
-
-        q:start()
+        runMysqlQuery(query, onSuccess, onError)
         return
     end
 
@@ -52,8 +81,8 @@ function EHChar.DB.Query(query, onSuccess, onError)
 
     if result == false then
         local err = sql.LastError()
-        print("[EHChar] SQLite Fehler: " .. tostring(err))
-        print("[EHChar] Query: " .. tostring(query))
+        dbPrint("SQLite Fehler: " .. tostring(err))
+        dbPrint("Query: " .. tostring(query))
         if onError then onError(err) end
         return
     end
@@ -131,34 +160,92 @@ function EHChar.DB.Connect()
     local cfg = EHChar.Config.Database or {}
     EHChar.DB.Ready = false
 
+    if EHChar.DB.Connecting then
+        dbPrint("Verbindung laeuft bereits.")
+        return
+    end
+
     if not cfg.UseMySQL then
         EHChar.DB.IsMySQL = false
         EHChar.DB.Ready = true
-        print("[EHChar] Nutze SQLite Testdatenbank.")
+        dbPrint("Nutze SQLite Testdatenbank.")
         EHChar.DB.InitTables()
+        return
+    end
+
+    if not cfg.Host or cfg.Host == "" or string.find(tostring(cfg.Host), "DEINE_SQL", 1, true) then
+        dbPrint("FEHLER: SQL-Host ist nicht eingetragen. Bitte sh_config.lua ausfuellen.")
+        return
+    end
+
+    if not cfg.Password or cfg.Password == "" or string.find(tostring(cfg.Password), "PASSWORT", 1, true) then
+        dbPrint("FEHLER: SQL-Passwort ist nicht eingetragen. Bitte sh_config.lua ausfuellen.")
         return
     end
 
     local ok, err = pcall(require, "mysqloo")
-    if not ok then
+    if not ok or not mysqloo then
         EHChar.DB.IsMySQL = false
         EHChar.DB.Ready = false
-        print("[EHChar] mysqloo konnte nicht geladen werden: " .. tostring(err))
+        dbPrint("mysqloo konnte nicht geladen werden: " .. tostring(err))
+        dbPrint("Loesung: mysqloo Modul in garrysmod/lua/bin installieren und Server neu starten.")
         return
     end
 
-    EHChar.DB.Connection = mysqloo.connect(cfg.Host, cfg.Username, cfg.Password, cfg.Database, tonumber(cfg.Port) or 3306)
     EHChar.DB.IsMySQL = true
+    EHChar.DB.Connecting = true
+
+    dbPrint("Verbinde zu MySQL: " .. tostring(cfg.Host) .. ":" .. tostring(cfg.Port or 3306) .. " / DB " .. tostring(cfg.Database) .. " / User " .. tostring(cfg.Username))
+
+    EHChar.DB.Connection = mysqloo.connect(
+        tostring(cfg.Host),
+        tostring(cfg.Username or ""),
+        tostring(cfg.Password or ""),
+        tostring(cfg.Database or ""),
+        tonumber(cfg.Port) or 3306
+    )
+
+    if EHChar.DB.Connection.setAutoReconnect then
+        pcall(function() EHChar.DB.Connection:setAutoReconnect(cfg.AutoReconnect ~= false) end)
+    end
 
     function EHChar.DB.Connection:onConnected()
         EHChar.DB.Ready = true
-        print("[EHChar] MySQL verbunden.")
+        EHChar.DB.Connecting = false
+        dbPrint("MySQL verbunden.")
         EHChar.DB.InitTables()
+        EHChar.DB.FlushPending()
     end
 
     function EHChar.DB.Connection:onConnectionFailed(errorText)
         EHChar.DB.Ready = false
-        print("[EHChar] MySQL Verbindung fehlgeschlagen: " .. tostring(errorText))
+        EHChar.DB.Connecting = false
+        dbPrint("MySQL Verbindung fehlgeschlagen: " .. tostring(errorText))
+        dbPrint("Pruefe Host, Port 3306, Datenbank, User, Passwort und externe Freigabe.")
+
+        if cfg.AutoReconnect then
+            local delay = tonumber(cfg.ReconnectDelay) or 10
+            timer.Simple(delay, function()
+                if EHChar and EHChar.DB and not EHChar.DB.Ready then
+                    EHChar.DB.Connect()
+                end
+            end)
+        end
+    end
+
+    function EHChar.DB.Connection:onDisconnected()
+        EHChar.DB.Ready = false
+        EHChar.DB.Connecting = false
+        dbPrint("MySQL Verbindung verloren.")
+
+        if cfg.AutoReconnect then
+            local delay = tonumber(cfg.ReconnectDelay) or 10
+            timer.Simple(delay, function()
+                if EHChar and EHChar.DB and not EHChar.DB.Ready then
+                    EHChar.DB.Connect()
+                end
+            end)
+        end
     end
 
     EHChar.DB.Connection:connect()
@@ -173,7 +260,7 @@ function EHChar.DB.GetCharacters(ply, callback)
     local sid = esc(ply:SteamID64())
 
     EHChar.DB.Query("SELECT * FROM eh_characters WHERE steamid64 = '" .. sid .. "' ORDER BY slot ASC;", function(data)
-        callback(data or {})
+        if callback then callback(data or {}) end
     end)
 end
 
@@ -187,13 +274,13 @@ function EHChar.DB.GetCharacterBySlot(ply, slot, callback)
     slot = math.Clamp(tonumber(slot) or 1, 1, EHChar.Config.MaxSlots)
 
     EHChar.DB.Query("SELECT * FROM eh_characters WHERE steamid64 = '" .. sid .. "' AND slot = " .. slot .. " LIMIT 1;", function(data)
-        callback(data and data[1] or nil)
+        if callback then callback(data and data[1] or nil) end
     end)
 end
 
 function EHChar.DB.SaveCharacter(ply, data, callback)
     if EHChar.DB.IsMySQL and not mysqlReady() then
-        print("[EHChar] Charakter kann nicht gespeichert werden: MySQL ist nicht bereit.")
+        dbPrint("Charakter kann nicht gespeichert werden: MySQL ist nicht bereit.")
         if callback then callback(nil) end
         return
     end
@@ -225,7 +312,7 @@ end
 
 function EHChar.DB.SaveJobData(characterID, jobID, rankName, jobModel, loadout)
     if EHChar.DB.IsMySQL and not mysqlReady() then
-        print("[EHChar] Jobdaten koennen nicht gespeichert werden: MySQL ist nicht bereit.")
+        dbPrint("Jobdaten koennen nicht gespeichert werden: MySQL ist nicht bereit.")
         return
     end
 
@@ -251,5 +338,9 @@ function EHChar.DB.SaveJobData(characterID, jobID, rankName, jobModel, loadout)
 end
 
 hook.Add("Initialize", "EHChar_DB_Connect", function()
-    EHChar.DB.Connect()
+    timer.Simple(1, function()
+        if EHChar and EHChar.DB then
+            EHChar.DB.Connect()
+        end
+    end)
 end)
