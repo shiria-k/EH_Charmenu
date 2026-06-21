@@ -1,5 +1,5 @@
 EHChar = EHChar or {}
-EHChar.Version = "0.1.2"
+EHChar.Version = "0.1.3"
 
 local PREFIX = "[EH_Charmenu] "
 
@@ -33,6 +33,7 @@ if SERVER then
 
     safeInclude("eh_charmenu/sv_resources.lua", false)
     safeInclude("eh_charmenu/sv_database.lua", false)
+    safeInclude("eh_charmenu/sv_version.lua", false)
     safeInclude("eh_charmenu/sv_core.lua", false)
 
     ehPrint("Server-Dateien geladen")
