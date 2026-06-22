@@ -174,12 +174,12 @@ function EHChar.DB.Connect()
     end
 
     if not cfg.Host or cfg.Host == "" or string.find(tostring(cfg.Host), "DEINE_SQL", 1, true) then
-        dbPrint("FEHLER: SQL-Host ist nicht eingetragen. Bitte sh_config.lua ausfuellen.")
+        dbPrint("FEHLER: SQL-Host ist nicht eingetragen. Bitte sv_config.lua ausfuellen.")
         return
     end
 
     if not cfg.Password or cfg.Password == "" or string.find(tostring(cfg.Password), "PASSWORT", 1, true) then
-        dbPrint("FEHLER: SQL-Passwort ist nicht eingetragen. Bitte sh_config.lua ausfuellen.")
+        dbPrint("FEHLER: SQL-Passwort ist nicht eingetragen. Bitte sv_config.lua ausfuellen.")
         return
     end
 
@@ -337,10 +337,18 @@ function EHChar.DB.SaveJobData(characterID, jobID, rankName, jobModel, loadout)
     end)
 end
 
-hook.Add("Initialize", "EHChar_DB_Connect", function()
-    timer.Simple(1, function()
+function EHChar.DB.StartConnectTimer()
+    timer.Simple(2, function()
         if EHChar and EHChar.DB then
             EHChar.DB.Connect()
         end
     end)
+end
+
+hook.Add("Initialize", "EHChar_DB_Connect", function()
+    EHChar.DB.StartConnectTimer()
 end)
+
+-- Wichtig fuer Force-Loader: Falls diese Datei nach Initialize geladen wird,
+-- startet die SQL-Verbindung trotzdem.
+EHChar.DB.StartConnectTimer()
